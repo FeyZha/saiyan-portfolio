@@ -1,0 +1,34 @@
+/* Quiet, static continuation of the welcome artwork, outside the editing canvas. */
+:root {
+    --sy-surface-warm: color-mix(in srgb, #efd2c0 28%, var(--sy-background));
+    --sy-surface-cool: color-mix(in srgb, #d9e5d9 28%, var(--sy-background));
+}
+:root.dark, :root[data-theme="dark"] {
+    --sy-surface-warm: color-mix(in srgb, #3e2c25 28%, var(--sy-background));
+    --sy-surface-cool: color-mix(in srgb, #26352f 28%, var(--sy-background));
+}
+.sy-discovery, .ca-root .ca-agent, .ca-home .ca-home__main {
+    position: relative;
+    isolation: isolate;
+    background-image:
+        radial-gradient(ellipse at 100% 0, var(--sy-surface-warm), transparent 65%),
+        radial-gradient(ellipse at 0 100%, var(--sy-surface-cool), transparent 65%);
+}
+.sy-discovery::before, .ca-root .ca-agent::before, .ca-home .ca-home__main::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background: var(--sy-muted);
+    opacity: .13;
+    mask: url('./product-surface.svg') center / cover no-repeat;
+}
+.ca-root .ca-agent::before {
+    opacity: .1;
+    mask-size: auto 100%;
+    mask-position: 80% center;
+}
+@media (max-width: 700px) {
+    .sy-discovery::before, .ca-home .ca-home__main::before { opacity: .08; }
+}

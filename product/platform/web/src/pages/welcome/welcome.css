@@ -1,0 +1,126 @@
+.sy-welcome {
+    --welcome-peach: #efd2c0;
+    --welcome-sage: #d9e5d9;
+    --welcome-sand: #eee4c8;
+    --welcome-line: #8b8375;
+    --welcome-muted: color-mix(in srgb, var(--sy-text) 12%, var(--sy-muted));
+    position: relative;
+    isolation: isolate;
+    height: 100svh;
+    overflow-y: auto;
+    background: var(--sy-background);
+    color: var(--sy-text);
+    transition: background-color 180ms, color 180ms;
+}
+:root[data-theme="dark"] .sy-welcome {
+    --welcome-peach: #3e2c25;
+    --welcome-sage: #26352f;
+    --welcome-sand: #343025;
+    --welcome-line: #82796b;
+}
+.sy-welcome-backdrop {
+    position: fixed;
+    inset: 48px 0 0;
+    overflow: hidden;
+    pointer-events: none;
+}
+.sy-welcome-field {
+    position: absolute;
+    inset: -32px;
+    background:
+        radial-gradient(ellipse 52% 68% at 91% 42%, var(--welcome-peach), transparent 80%),
+        radial-gradient(ellipse 70% 68% at 35% 94%, var(--welcome-sage), transparent 82%),
+        radial-gradient(ellipse 60% 50% at 60% 5%, var(--welcome-sand), transparent 85%);
+    animation: sy-welcome-field-drift 26s ease-in-out infinite alternate;
+}
+.sy-welcome-field-map {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    color: var(--welcome-line);
+    mask-image: radial-gradient(ellipse 40% 36% at 34% 43%, transparent 15%, #000 100%);
+}
+.sy-welcome-field-grid { opacity: .32; }
+.sy-welcome-field-dots { opacity: .19; }
+.sy-welcome-backdrop[data-paused] .sy-welcome-field { animation-play-state: paused; }
+@keyframes sy-welcome-field-drift {
+    from { transform: translate3d(-8px, -5px, 0) rotate(-.18deg); }
+    to { transform: translate3d(8px, 5px, 0) rotate(.18deg); }
+}
+.sy-welcome > .sy-product-nav { position: sticky; top: 0; z-index: 2; }
+.sy-welcome-main {
+    position: relative;
+    box-sizing: border-box;
+    width: min(100%, 1120px);
+    min-height: calc(100svh - 48px);
+    margin: 0 auto;
+    padding: 80px 64px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 80px;
+}
+.sy-welcome-hero { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr); gap: 18px; align-items: center; }
+.sy-welcome-heading { position: relative; z-index: 1; animation: sy-welcome-enter 400ms ease-out both; }
+.sy-welcome-heading h1 {
+    margin: 0;
+    font-family: "STZhongsong", "Songti SC", "Noto Serif CJK SC", "SimSun", serif;
+    font-size: clamp(44px, 6.3vw, 76px);
+    font-weight: 400;
+    line-height: 1.35;
+    letter-spacing: -.025em;
+}
+.sy-welcome-heading h1 span { color: var(--sy-accent); }
+.sy-welcome-heading p { margin: 26px 0 0; color: var(--welcome-muted); font-size: 17px; line-height: 1.75; }
+.sy-welcome-art { display: block; width: 100%; overflow: visible; color: var(--sy-text); pointer-events: none; animation: sy-welcome-enter 500ms 80ms ease-out both; }
+.sy-welcome-art-guides { opacity: .07; }
+.sy-welcome-art-paper { fill: var(--sy-background); stroke: var(--sy-border); stroke-width: 1; }
+.sy-welcome-art-brief { color: var(--sy-muted); }
+.sy-welcome-art-ink { fill: currentColor; opacity: .3; }
+.sy-welcome-art-accent { fill: var(--sy-accent); }
+.sy-welcome-art-wash { fill: color-mix(in srgb, var(--sy-accent) 12%, var(--sy-background)); }
+.sy-welcome-art-land { fill: color-mix(in srgb, var(--sy-accent) 38%, var(--sy-background)); }
+.sy-welcome-art-route, .sy-welcome-art-selection { stroke: var(--sy-accent); opacity: .6; }
+.sy-welcome-art-handle { fill: var(--sy-background); }
+.sy-welcome-art-cursor { fill: var(--sy-text); stroke: var(--sy-background); }
+.sy-welcome-entries { display: grid; grid-template-columns: 1fr 1fr; gap: 56px; animation: sy-welcome-enter 400ms 70ms ease-out both; }
+.sy-welcome-entry {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+    padding: 28px 0;
+    border: 0;
+    border-top: 1px solid var(--sy-border);
+    background: transparent;
+    color: var(--sy-text);
+    text-align: left;
+    cursor: pointer;
+    transition: border-color 180ms, transform 100ms;
+}
+.sy-welcome-entry-title { display: flex; align-items: center; justify-content: space-between; gap: 16px; font-size: 26px; font-weight: 500; line-height: 1.5; }
+.sy-welcome-entry-title svg { width: 24px; height: 24px; flex: none; transition: transform 180ms; }
+.sy-welcome-entry--discovery .sy-welcome-entry-title { color: var(--sy-accent); }
+.sy-welcome-entry-detail { color: var(--welcome-muted); font-size: 15px; line-height: 1.75; }
+.sy-welcome-entry:hover { border-top-color: var(--sy-accent); }
+.sy-welcome-entry:hover svg { transform: translateX(4px); }
+.sy-welcome-entry:active { transform: translateY(2px); }
+.sy-welcome-entry:focus-visible { outline: 2px solid var(--sy-accent); outline-offset: 8px; }
+.sy-welcome-error { position: sticky; top: 48px; z-index: 1; margin: 0; padding: 10px 24px; border-bottom: 1px solid var(--sy-border); background: var(--sy-background); color: var(--sy-text); font-size: 14px; line-height: 1.75; }
+@keyframes sy-welcome-enter { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@media (max-width: 700px) {
+    .sy-welcome-field-map { opacity: .65; }
+    .sy-welcome-main { padding: 56px 28px; gap: 48px; }
+    .sy-welcome-heading h1 { font-size: clamp(32px, 7.7vw, 52px); }
+    .sy-welcome-heading p { max-width: 24em; font-size: 16px; }
+    .sy-welcome-hero { display: block; }
+    .sy-welcome-art { display: none; }
+    .sy-welcome-entries { grid-template-columns: 1fr; gap: 8px; }
+    .sy-welcome-entry { padding: 24px 0; gap: 10px; }
+    .sy-welcome-entry-title { font-size: 24px; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .sy-welcome, .sy-welcome-entry, .sy-welcome-entry-title svg { transition: none; }
+    .sy-welcome-heading, .sy-welcome-entries, .sy-welcome-art, .sy-welcome-field { animation: none; }
+}

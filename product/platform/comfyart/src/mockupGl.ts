@@ -1,0 +1,138 @@
+import { loadImage } from './adjust'
+import { canvasBlob } from './canvasBlob'
+
+export interface Placement { x: number; y: number; scale: number; rotation: number; warp: number }
+export interface MockupSources { photo: string; depth: string; mask: string; design: string }
+
+const VERTEX = `#version 300 es
+in vec2 pos;
+out vec2 uv;
+void main() { uv = vec2(pos.x * 0.5 + 0.5, 0.5 - pos.y * 0.5); gl_Position = vec4(pos, 0.0, 1.0); }`
+
+const FRAGMENT = `#version 300 es
+precision highp float;
+in vec2 uv;
+out vec4 color;
+uniform sampler2D photo, depth, mask, design;
+uniform vec2 center, size, texel;
+uniform float rotation, warp, median, hasDesign;
+float lum(vec3 c) { return dot(c, vec3(0.299, 0.587, 0.114)); }
+void main() {
+  vec4 p = texture(photo, uv);
+  color = p;
+  if (hasDesign < 0.5) return;
+  vec2 step = texel * 8.0;
+  float dx = texture(depth, uv + vec2(step.x, 0.0)).r - texture(depth, uv - vec2(step.x, 0.0)).r;
+  float dy = texture(depth, uv + vec2(0.0, step.y)).r - texture(depth, uv - vec2(0.0, step.y)).r;
+  vec2 q = uv - warp * 0.5 * vec2(dx, dy) - center;
+  float c = cos(-rotation), s = sin(-rotation);
+  vec2 local = vec2(c * q.x - s * q.y, s * q.x + c * q.y) / size + 0.5;
+  if (local.x < 0.0 || local.x > 1.0 || local.y < 0.0 || local.y > 1.0) return;
+  vec4 d = texture(design, local);
+  float shade = clamp(lum(p.rgb) / max(median, 0.05), 0.0, 1.6);
+  float a = d.a * texture(mask, uv).r;
+  color = vec4(mix(p.rgb, d.rgb * shade, a), p.a);
+}`
+
+function compile(gl: WebGL2RenderingContext, type: number, src: string) {
+  const s = gl.createShader(type)!
+  gl.shaderSource(s, src)
+  gl.compileShader(s)
+  if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s) ?? 'shader failed')
+  return s
+}
+
+function medianLuma(photo: HTMLImageElement, mask: HTMLImageElement) {
+  const side = 128
+  const c = document.createElement('canvas')
+  c.width = c.height = side
+  const ctx = c.getContext('2d', { willReadFrequently: true })!
+  ctx.drawImage(photo, 0, 0, side, side)
+  const p = ctx.getImageData(0, 0, side, side).data
+  ctx.drawImage(mask, 0, 0, side, side)
+  const m = ctx.getImageData(0, 0, side, side).data
+  const values: number[] = []
+  for (let i = 0; i < p.length; i += 4) if (m[i] > 128) values.push((0.299 * p[i] + 0.587 * p[i + 1] + 0.114 * p[i + 2]) / 255)
+  values.sort((a, b) => a - b)
+  return values.length ? values[values.length >> 1] : 0.5
+}
+
+export class MockupRenderer {
+  readonly gl: WebGL2RenderingContext
+  private program: WebGLProgram
+  private textures: Partial<Record<keyof MockupSources, WebGLTexture>> = {}
+  private loaded: Partial<MockupSources> = {}
+  private median = 0.5
+  private photoSize: [number, number] = [1, 1]
+  private designAspect = 1
+
+  constructor(readonly canvas: HTMLCanvasElement) {
+    const gl = canvas.getContext('webgl2', { preserveDrawingBuffer: true, premultipliedAlpha: false })
+    if (!gl) throw new Error('WebGL2 is not available')
+    this.gl = gl
+    const program = gl.createProgram()!
+    gl.attachShader(program, compile(gl, gl.VERTEX_SHADER, VERTEX))
+    gl.attachShader(program, compile(gl, gl.FRAGMENT_SHADER, FRAGMENT))
+    gl.linkProgram(program)
+    this.program = program
+    gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer())
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW)
+    const at = gl.getAttribLocation(program, 'pos')
+    gl.enableVertexAttribArray(at)
+    gl.vertexAttribPointer(at, 2, gl.FLOAT, false, 0, 0)
+  }
+
+  async load(sources: MockupSources) {
+    const gl = this.gl
+    const changed = (Object.keys(sources) as (keyof MockupSources)[]).filter((k) => sources[k] !== this.loaded[k])
+    const images: Partial<Record<keyof MockupSources, HTMLImageElement>> = {}
+    await Promise.all(changed.filter((k) => sources[k]).map(async (k) => { images[k] = await loadImage(sources[k]) }))
+    for (const k of changed) {
+      const img = images[k]
+      if (!img) { delete this.textures[k]; continue }
+      const tex = this.textures[k] ?? gl.createTexture()!
+      gl.bindTexture(gl.TEXTURE_2D, tex)
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img)
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
+      this.textures[k] = tex
+      if (k === 'photo') this.photoSize = [img.naturalWidth, img.naturalHeight]
+      if (k === 'design') this.designAspect = img.naturalHeight / img.naturalWidth
+    }
+    if (images.photo || images.mask) this.median = medianLuma(images.photo ?? await loadImage(sources.photo), images.mask ?? await loadImage(sources.mask))
+    this.loaded = { ...sources }
+  }
+
+  draw(p: Placement) {
+    const { gl, program } = this
+    gl.viewport(0, 0, this.canvas.width, this.canvas.height)
+    gl.useProgram(program)
+    const names = ['photo', 'depth', 'mask', 'design'] as const
+    names.forEach((n, i) => {
+      gl.activeTexture(gl.TEXTURE0 + i)
+      gl.bindTexture(gl.TEXTURE_2D, this.textures[n] ?? null)
+      gl.uniform1i(gl.getUniformLocation(program, n), i)
+    })
+    const [pw, ph] = this.photoSize
+    gl.uniform2f(gl.getUniformLocation(program, 'center'), p.x, p.y)
+    gl.uniform2f(gl.getUniformLocation(program, 'size'), p.scale, (p.scale * this.designAspect * pw) / ph)
+    gl.uniform2f(gl.getUniformLocation(program, 'texel'), 1 / pw, 1 / ph)
+    gl.uniform1f(gl.getUniformLocation(program, 'rotation'), p.rotation)
+    gl.uniform1f(gl.getUniformLocation(program, 'warp'), p.warp)
+    gl.uniform1f(gl.getUniformLocation(program, 'median'), this.median)
+    gl.uniform1f(gl.getUniformLocation(program, 'hasDesign'), this.textures.design ? 1 : 0)
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
+  }
+
+  get size() { return this.photoSize }
+}
+
+export async function bakeMockup(sources: MockupSources, placement: Placement): Promise<Blob> {
+  const canvas = document.createElement('canvas')
+  const r = new MockupRenderer(canvas)
+  await r.load(sources)
+  ;[canvas.width, canvas.height] = r.size
+  r.draw(placement)
+  return canvasBlob(canvas)
+}

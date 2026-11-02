@@ -1,0 +1,1 @@
+export{t as sanitizeSvg}from"./sanitizeSvg-B4lIbzor.js";

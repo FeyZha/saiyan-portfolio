@@ -1,0 +1,16 @@
+{
+  "name": "design-competition-os",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "setup": "npm --prefix platform/web ci && npm --prefix platform/pi-agent ci --ignore-scripts && npm --prefix platform/canvas-agent ci && npm --prefix platform/canvas-agent run build && node scripts/setup-competition-agent.mjs",
+    "dev": "node platform/pi-agent/node_modules/tsx/dist/cli.mjs scripts/comfyart-preview.mjs",
+    "dev:competitions": "node platform/pi-agent/node_modules/tsx/dist/cli.mjs scripts/pi-library-current-preview.mjs",
+    "build": "npm --prefix platform/canvas-agent run build && npm --prefix platform/web run build",
+    "typecheck": "npm --prefix platform/web run typecheck"
+  },
+  "engines": {
+    "node": ">=24"
+  }
+}

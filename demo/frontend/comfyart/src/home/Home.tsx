@@ -1,0 +1,180 @@
+import { useEffect, useRef, useState } from 'react'
+
+import type { AgentMode } from '../agent'
+import { botEnabledAtom, loadProviders } from '../bot'
+import { thumbUrl, uploadImage, viewUrl } from '../comfy'
+import { t } from '../i18n'
+import { errorText } from '../jobs'
+import { newProject, openView, type ProjectEntry } from '../projects'
+import { loadSkills, type Skill } from '../skills'
+import { Icons } from '../ui/icons'
+import { isEnter } from '../ui/keys'
+import { Popover } from '../ui/Popover'
+import { loadEntries, ProjectCard } from './Projects'
+
+const RECENT = 5
+const ROTATE_MS = 4000
+const EXAMPLES = [t('home.example1'), t('home.example2'), t('home.example3'), t('home.example4')]
+const QUICK: [keyof typeof Icons, string, string][] = [
+  ['grid', t('home.quickSocial'), t('home.quickSocialPrompt')],
+  ['assets', t('home.quickEcommerce'), t('home.quickEcommercePrompt')],
+  ['palette', t('home.quickBrand'), t('home.quickBrandPrompt')],
+  ['effects', t('home.quickCreative'), t('home.quickCreativePrompt')],
+  ['page', t('home.quickWebsite'), t('home.quickWebsitePrompt')],
+]
+const MODES: [AgentMode, string, keyof typeof Icons][] = [['agent', 'Agent', 'agent'], ['image', t('composer.image'), 'genImage'], ['video', t('common.video'), 'genVideo']]
+
+export function Home() {
+  const [text, setText] = useState('')
+  const [refs, setRefs] = useState<string[]>([])
+  const [mode, setMode] = useState<AgentMode>('agent')
+  const [agent, setAgent] = useState<boolean | null>(null)
+  const [modeMenu, setModeMenu] = useState(false)
+  const [example, setExample] = useState(0)
+  const [recent, setRecent] = useState<ProjectEntry[] | null>(null)
+  const [skills, setSkills] = useState<Skill[]>([])
+  const [uploading, setUploading] = useState(false)
+  const [error, setError] = useState('')
+  const [drop, setDrop] = useState(false)
+  const input = useRef<HTMLTextAreaElement>(null)
+  const file = useRef<HTMLInputElement>(null)
+  const breakdown = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    input.current?.focus()
+    void loadProviders().then(() => {
+      const on = !!botEnabledAtom.get()
+      setAgent(on)
+      if (!on) setMode('image')
+    }, () => { setAgent(false); setMode('image') })
+    void loadEntries(RECENT).then(setRecent)
+    void loadSkills().then(setSkills)
+    const timer = window.setInterval(() => setExample((i) => (i + 1) % EXAMPLES.length), ROTATE_MS)
+    return () => clearInterval(timer)
+  }, [])
+
+  const send = () => {
+    if (!text.trim() || uploading) return
+    newProject({ ask: text.trim(), mode, ref: refs })
+  }
+  const upload = async (files: FileList | null) => {
+    setUploading(true)
+    try {
+      for (const f of Array.from(files ?? []).filter((x) => x.type.startsWith('image/'))) {
+        const src = viewUrl(await uploadImage(f, f.name))
+        setRefs((r) => (r.includes(src) ? r : [...r, src]))
+      }
+    } catch (e) {
+      setError(errorText(e))
+    } finally {
+      setUploading(false)
+    }
+  }
+  const breakDown = async (f: File | undefined) => {
+    if (!f) return
+    setUploading(true)
+    try {
+      newProject({ ref: viewUrl(await uploadImage(f, f.name)), tool: 'elements' })
+    } catch (e) {
+      setError(errorText(e))
+      setUploading(false)
+    }
+  }
+  const modes = MODES.filter(([m]) => agent || m !== 'agent')
+  const modeInfo = MODES.find(([m]) => m === mode)!
+
+  return (
+    <div className="ca-landing">
+      <h1 className="ca-landing__title">{t('home.whatToDesign')}</h1>
+      <div
+        className="ca-landing__box"
+        data-drop={drop || undefined}
+        onDragOver={(e) => { if (e.dataTransfer.types.includes('Files')) { e.preventDefault(); setDrop(true) } }}
+        onDragLeave={() => setDrop(false)}
+        onDrop={(e) => { e.preventDefault(); setDrop(false); void upload(e.dataTransfer.files) }}
+      >
+        {refs.length > 0 && (
+          <div className="ca-landing__refs">
+            {refs.map((src) => (
+              <span key={src} className="ca-landing__ref">
+                <img src={thumbUrl(src, 128)} alt="" />
+                <button type="button" title={t('common.remove')} onClick={() => setRefs(refs.filter((x) => x !== src))}>{Icons.close}</button>
+              </span>
+            ))}
+          </div>
+        )}
+        <textarea
+          ref={input}
+          className="ca-landing__input"
+          value={text}
+          placeholder={EXAMPLES[example]}
+          onChange={(e) => setText(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Tab' && !text) { e.preventDefault(); setText(EXAMPLES[example]) }
+            if (isEnter(e) && !e.shiftKey) { e.preventDefault(); send() }
+          }}
+        />
+        <div className="ca-landing__foot">
+          <button type="button" className="ca-rail__btn" title={t('home.addImage')} onClick={() => file.current?.click()}><span className="ca-icon">{Icons.plus}</span></button>
+          <Popover open={modeMenu} onOpenChange={setModeMenu} trigger={({ open, toggle }) => (
+            <button type="button" className="ca-landing__mode" data-open={open || undefined} onClick={toggle}>
+              <span className="ca-icon">{Icons[modeInfo[2]]}</span>{modeInfo[1]}<span className="ca-icon">{Icons.chevron}</span>
+            </button>
+          )}>
+            <div className="ca-menu">
+              {modes.map(([m, label, icon]) => (
+                <button key={m} type="button" className="ca-menu__item" onClick={() => { setMode(m); setModeMenu(false) }}>
+                  <span className="ca-icon">{Icons[icon]}</span><span className="ca-menu__grow">{label}</span>
+                  {m === mode && <span className="ca-icon">{Icons.check}</span>}
+                </button>
+              ))}
+            </div>
+          </Popover>
+          <div className="ca-landing__spacer" />
+          <button type="button" className="ca-landing__send" disabled={!text.trim() || uploading} title={t('composer.send')} onClick={send}><span className="ca-icon">{Icons.send}</span></button>
+        </div>
+        <input ref={file} type="file" accept="image/*" multiple hidden onChange={(e) => { void upload(e.target.files); e.target.value = '' }} />
+      </div>
+      {error && <div className="ca-landing__error" onClick={() => setError('')}>{error}</div>}
+      <div className="ca-landing__quick">
+        <span className="ca-landing__hint">{t('home.letAgentHelp')}</span>
+        {QUICK.map(([icon, label, prompt]) => (
+          <button key={label} type="button" className="ca-landing__chip" onClick={() => { setText(prompt); input.current?.focus() }}>
+            <span className="ca-icon">{Icons[icon]}</span>{label}
+          </button>
+        ))}
+        <button type="button" className="ca-landing__chip" disabled={uploading} title={t('home.breakdownHint')} onClick={() => breakdown.current?.click()}>
+          <span className="ca-icon">{Icons.layers}</span>{t('home.breakdown')}
+        </button>
+        <input ref={breakdown} type="file" accept="image/*" hidden onChange={(e) => { void breakDown(e.target.files?.[0]); e.target.value = '' }} />
+      </div>
+
+      <section className="ca-landing__section">
+        <div className="ca-landing__head">
+          <h2>{t('home.recentProjects')}</h2>
+          <button type="button" className="ca-landing__link" onClick={() => openView('projects')}>{t('home.viewAll')}</button>
+        </div>
+        {recent?.length === 0 && <div className="ca-projects__empty">{t('home.noProjectsYet')}</div>}
+        <div className="ca-projects__grid">
+          {recent?.map((e) => <ProjectCard key={e.id} entry={e} onChanged={() => void loadEntries(RECENT).then(setRecent)} />)}
+        </div>
+      </section>
+
+      <section className="ca-landing__section">
+        <div className="ca-landing__head"><h2>{t('home.startFromSkill')}</h2></div>
+        <div className="ca-skillgrid">
+          {skills.map((s) => {
+            const cover = Object.values(s.images ?? {})[0]
+            return (
+              <button key={s.id} type="button" className="ca-skillcard" onClick={() => newProject({ skill: s.id })}>
+                <span className="ca-skillcard__icon">{cover ? <img src={thumbUrl(cover, 128)} alt="" /> : <span className="ca-icon">{Icons.skill}</span>}</span>
+                <span className="ca-skillcard__name">{s.name}</span>
+                <span className="ca-model__tag">{s.custom ? t('home.mySkill') : t('home.builtIn')}</span>
+              </button>
+            )
+          })}
+        </div>
+      </section>
+    </div>
+  )
+}

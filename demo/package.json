@@ -1,0 +1,10 @@
+{
+  "name": "saiyan-experience",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build-static.mjs",
+    "typecheck": "npm --prefix frontend/web run typecheck && npm --prefix frontend/comfyart run typecheck",
+    "preview": "node scripts/preview.mjs"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "name": "saiyan-portfolio",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "preview": "node demo/scripts/preview.mjs 3201",
+    "build:demo": "npm --prefix demo run build"
+  }
+}

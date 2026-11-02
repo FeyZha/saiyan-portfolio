@@ -1,0 +1,8 @@
+{
+  "repository": "https://github.com/jtydhr88/ComfyArt",
+  "commit": "13396a8c160cd7950ab7365393475973090b69c1",
+  "version": "1.1.0",
+  "integration": "Official source snapshot plus competition handoff and Codex image adapter. No advertising fork imported.",
+  "runtimeData": "../../workspace/comfyart-runtime",
+  "license": "Keep LICENSE and licenses/ from upstream. tldraw has separate terms."
+}

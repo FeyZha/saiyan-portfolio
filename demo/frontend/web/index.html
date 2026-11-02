@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="zh-CN" class="font-sans">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="description" content="整理竞赛规则、筛选投稿方向、回看来源依据的设计竞赛智能决策助手" />
+        <link rel="icon" href="/logo.svg" />
+        <title>赛研 | 设计竞赛智能决策助手</title>
+        <script>
+            try {
+                var s = JSON.parse(localStorage.getItem("infinite-canvas:theme_store") || "{}");
+                var t = s.state && s.state.theme === "dark" ? "dark" : "light";
+                document.documentElement.classList.toggle("dark", t === "dark");
+                document.documentElement.dataset.theme = t;
+                document.documentElement.style.colorScheme = t;
+            } catch (e) {}
+        </script>
+    </head>
+    <body class="bg-background text-foreground antialiased">
+        <div id="root"></div>
+        <script src="/config.js"></script>
+        <script type="module" src="/src/main.tsx"></script>
+    </body>
+</html>

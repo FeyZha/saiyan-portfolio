@@ -1,0 +1,59 @@
+{
+  "headers": [
+    {
+      "source": "/*",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; script-src 'self'; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' data: blob:; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'"
+        }
+      ]
+    },
+    {
+      "source": "/service-worker.js",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        }
+      ]
+    }
+  ],
+  "installCommand": "echo no_dependencies",
+  "buildCommand": "echo static_site_ready",
+  "outputDirectory": "site",
+  "rewrites": [
+    {
+      "source": "/competitions",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/competitions/",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/workspaces",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/canvas",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/image",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/comfyart",
+      "destination": "/comfyart/index.html"
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+[project]
+name = "ComfyArt"
+description = "A free, open-source AI design canvas that runs fully on your own ComfyUI"
+version = "1.1.0"
+license = {text = "MIT"}
+dependencies = ["pypdfium2", "rapidocr"]
+
+[project.urls]
+Repository = "https://github.com/jtydhr88/ComfyArt"
+
+[tool.comfy]
+PublisherId = "jtydhr88"
+DisplayName = "ComfyArt"
+Icon = ""
+includes = ["dist"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"

@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1800" viewBox="0 0 1200 1800">
+    <rect width="1200" height="1800" fill="#f4f0e8"/>
+    <g font-family="Microsoft YaHei, PingFang SC, sans-serif">
+    <text x="80" y="95" font-size="26" fill="#9c3b25">设计推演 / 从一个具体场景开始</text>
+    <text x="80" y="180" font-size="48" fill="#292722"><tspan x="80" dy="0">非命题赛道自由主题创作 · 微信终端设计</tspan></text>
+    <path d="M80 365H1120" stroke="#bdb5a9"/>
+    <text x="80" y="425" font-size="24" fill="#80766a">主题线索</text>
+    <text x="80" y="485" font-size="30" fill="#292722"><tspan x="80" dy="0">自由主题，不限技法及创作形式</tspan></text>
+    <g transform="translate(80 700)"><rect width="1040" height="390" rx="12" fill="#e4ddcf"/>
+    <circle cx="270" cy="195" r="112" fill="#ba4427"/><rect x="470" y="85" width="225" height="225" fill="#b2bea7"/>
+    <path d="M325 195H470M695 195H875" stroke="#292722" stroke-width="3"/>
+    <circle cx="875" cy="195" r="68" fill="none" stroke="#292722" stroke-width="3"/>
+    <text x="270" y="205" fill="white" font-size="27" text-anchor="middle">主题</text>
+    <text x="582" y="205" font-size="27" text-anchor="middle">核心表达</text>
+    <text x="875" y="205" font-size="27" text-anchor="middle">应用</text></g>
+    <text x="80" y="1175" font-size="24" fill="#80766a">先验证什么</text>
+    <text x="80" y="1240" font-size="32" fill="#292722"><tspan x="80" dy="0">先明确作品面对的人与使用动作，以同一视觉语言连接核心表达和应用</tspan><tspan x="80" dy="52">。</tspan></text>
+    <path d="M80 1495H1120" stroke="#bdb5a9"/>
+    <text x="80" y="1550" font-size="24" fill="#80766a">对应任务成果</text>
+    <text x="80" y="1610" font-size="28" fill="#292722"><tspan x="80" dy="0">所选类别的主体作品或学术论文 · 微信终端设计 / 微信类移动终端可访</tspan><tspan x="80" dy="46">问二维码 / 作品展示视频</tspan></text>
+    <text x="80" y="1750" font-size="21" fill="#80766a">构图草案 · 用于继续讨论与设计</text></g></svg>

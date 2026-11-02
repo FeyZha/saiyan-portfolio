@@ -1,0 +1,18 @@
+:root {
+    --sy-background: #f5f2eb;
+    --sy-text: #292722;
+    --sy-muted: #736b65;
+    --sy-border: #e4e0d9;
+    --sy-hover: rgba(41,39,34,.06);
+    --sy-field: rgba(41,39,34,.04);
+    --sy-accent: #b43a20;
+}
+:root.dark, :root[data-theme="dark"] {
+    --sy-background: #171715;
+    --sy-text: #f5f5f4;
+    --sy-muted: #a8a29e;
+    --sy-border: #383834;
+    --sy-hover: rgba(245,245,244,.08);
+    --sy-field: rgba(245,245,244,.06);
+    --sy-accent: #ff9277;
+}
